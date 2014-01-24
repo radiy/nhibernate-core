@@ -65,7 +65,15 @@ namespace NHibernate.Engine.Query
 					log.Debug("unable to locate HQL query plan in cache; generating (" + queryExpression.Key + ")");
 				}
 				plan = new QueryExpressionPlan(queryExpression, shallow, enabledFilters, factory);
-				planCache.Put(key, plan);
+				if (plan.QueryExpression is NhLinqExpression)
+				{
+					var nhLinqExpression = ((NhLinqExpression)plan.QueryExpression).Clone();
+					planCache.Put(key, plan.Copy(nhLinqExpression));
+				}
+				else
+				{
+					planCache.Put(key, plan);
+				}
 			}
 			else
 			{

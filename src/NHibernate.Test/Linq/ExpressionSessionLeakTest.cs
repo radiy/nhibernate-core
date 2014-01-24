@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using NHibernate.DomainModel.Northwind.Entities;
 using NHibernate.Linq;
 using NUnit.Framework;
@@ -8,7 +9,7 @@ namespace NHibernate.Test.Linq
 {
 	public class ExpressionSessionLeakTest : LinqTestCase
 	{
-		[Test, KnownBug("NH-3579")]
+		[Test]
 		public void SessionGetsCollected()
 		{
 			var reference = DoLinqInSeparateSession();
@@ -16,6 +17,26 @@ namespace NHibernate.Test.Linq
 			GC.Collect();
 
 			Assert.That(reference.IsAlive, Is.False);
+		}
+
+		[Test]
+		public void LeakObjectRef()
+		{
+			var checRef = DoLeakObjectRef();
+
+			GC.Collect();
+			Assert.IsFalse(checRef.IsAlive);
+		}
+
+		private WeakReference DoLeakObjectRef()
+		{
+			WeakReference checRef;
+			using (var session2 = session.SessionFactory.OpenSession()) {
+				var c1 = session2.Query<Customer>().First();
+				checRef = new WeakReference(c1);
+				session2.Query<Customer>().Count(c => c != c1);
+			}
+			return checRef;
 		}
 
 		private WeakReference DoLinqInSeparateSession()

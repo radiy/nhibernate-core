@@ -28,6 +28,10 @@ namespace NHibernate.Linq
 		internal Expression _expression;
 		internal IDictionary<ConstantExpression, NamedParameter> _constantToParameterMap;
 
+		private NhLinqExpression()
+		{
+		}
+
 		public NhLinqExpression(Expression expression, ISessionFactoryImplementor sessionFactory)
 		{
 			_expression = NhPartialEvaluatingExpressionTreeVisitor.EvaluateIndependentSubtrees(expression);
@@ -75,6 +79,13 @@ namespace NHibernate.Linq
 		{
 			ExpressionToHqlTranslationResults = other.ExpressionToHqlTranslationResults;
 			ParameterDescriptors = other.ParameterDescriptors;
+		}
+
+		internal NhLinqExpression Clone()
+		{
+			var clone = new NhLinqExpression();
+			clone.CopyExpressionTranslation(this);
+			return clone;
 		}
 	}
 }
